@@ -22,16 +22,13 @@ const upload = multer({ storage });
 app.post(
   "/upload",
   upload.single("image"),
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
     if (!req.file) {
       res.status(400).send("No file uploaded.");
       return;
     }
-
     const outputPath = path.join(uploadDir, `${Date.now()}.avif`);
-
     await sharp(req.file.buffer).resize(1024, 1024, { fit: "inside" }).toFormat("avif").toFile(outputPath);
-
     res.status(200).send("Image uploaded and converted to AVIF format.");
   })
 );
