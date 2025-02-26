@@ -41,18 +41,20 @@ app.post(
     const filename = `${timestamp}.avif`;
     const outputPath = path.join(uploadDir, filename);
 
-    // 원본 이미지 크기 가져오기
-    const metadata = await sharp(req.file.buffer).metadata();
-
     // 이미지 변환 및 저장
-    await sharp(req.file.buffer)
-      .resize(1024, 1024, { fit: "inside" }) // 사이즈 조정
-      .toFormat("avif")
-      .toFile(outputPath);
+    const processedImage = sharp(req.file.buffer)
+      .rotate() // EXIF 데이터 기반 자동 회전
+      .resize(1024, 1024, { fit: "inside" }) // 크기 조정
+      .toFormat("avif");
+
+    await processedImage.toFile(outputPath);
+
+    // 변환된 이미지의 width, height 가져오기
+    const finalMetadata = await processedImage.metadata();
 
     // 정적 파일 URL 반환 + width, height 추가
     const fileUrl = `/uploads/${filename}`;
-    res.status(200).json({ src: fileUrl, width: metadata.width, height: metadata.height });
+    res.status(200).json({ src: fileUrl, width: finalMetadata.width, height: finalMetadata.height });
   })
 );
 
